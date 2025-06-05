@@ -147,7 +147,7 @@ for i, op in enumerate(st.session_state.operations):
     with cols[1]:
         if st.button("❌", key=f"delete_{i}"):
             st.session_state.operations.pop(i)
-            st.experimental_rerun()
+            st.rerun()
 
 
         
