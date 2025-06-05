@@ -1,6 +1,21 @@
 import streamlit as st
 from datetime import date
 from fpdf import FPDF
+from utils import (
+    get_cotation_cognitif, 
+    get_cotation_posture_finale, 
+    get_effort_level_global,
+    POIDS_CLASSES, 
+    FREQ_CLASSES, 
+    effort_table
+)
+import yaml
+with open("constants.yaml", "r", encoding="utf-8") as f:
+    constants = yaml.safe_load(f)
+
+PONDERATIONS = constants["ponderations"]
+POSTURES_NIVEAU_4_5 = constants["postures_niveau_4_5"]
+
 
 st.set_page_config(page_title="Cotation M2E", layout="wide")
 st.title("\U0001F4CB Cotation Ergonomique M2E - Vie Série")
@@ -21,101 +36,6 @@ st.markdown(f"- **UET** : {uet}")
 st.markdown(f"- **Poste** : {poste}")
 st.markdown(f"- **Date de cotation** : {date_cotation.strftime('%d/%m/%Y')}")
 st.markdown(f"- **Évaluateur** : {evaluateur}")
-
-
-# Pondérations avec explications
-PONDERATIONS = {
-    "M1 - Retournement facilité avec appui (0.5)": 0.5,
-    "M2 - Poussée ou traction assistée (0.7)": 0.7,
-    "M3 - Retournement sans appui (1.5)": 1.5,
-    "M4 - Bras écartés >1m ou tendus >50cm (1.5)": 1.5,
-    "M5 - Maintien précis 1 main prolongé (1.5)": 1.5,
-    "M6 - Charge instable ou CG déporté (1.5)": 1.5,
-    "M7 - Port >6kg hors fenêtre ergonomique (1.5)": 1.5,
-    "M8 - Prise bout des doigts ou 1 main >6kg (1.5)": 1.5,
-    "M9 - Port >6kg avec marches (1.5)": 1.5,
-    "M10 - Port >6kg avec déplacement >5m (1.5)": 1.5,
-    "M11 - Effort en abduction (bras écartés) (2.0)": 2.0,
-    "M12 - Soulèvement en position assise (2.0)": 2.0
-}
-
-POSTURES_NIVEAU_4_5 = [
-    # TRONC : FLEXION
-    "A4 - Dos penché sans appui ou avec charge / durée (30°-60°)",
-    "A5 - Dos penché sans appui ou avec charge / durée (>60°)",
-    "B4 - Dos penché avec appui stable, courte durée et effort <2kg (30°-60°)",
-    "B5 - Dos penché avec appui stable, courte durée et effort <2kg (>60°)",
-
-    # TRONC : INCLINAISON
-    "C4 - Inclinaison latérale du tronc (30°-60°)",
-    "C5 - Inclinaison latérale du tronc > 60°",
-
-    # TRONC : ROTATION
-    "D4 - Rotation tronc modérée (45°-90°) ou inclinaison avec maintien",
-    "D5 - Rotation tronc importante ≥ 90° ou forte inclinaison prolongée",
-
-    # TÊTE
-    "E4 - Inclinaison tête >30° ou rotation 45°-90° (durée > 5s)",
-    "E5 - Rotation tête ≥ 90° ou forte extension arrière",
-
-    # BRAS / MAINS
-    "F4 - Bras levés / tendus avec charge ou durée > 5s",
-    "F5 - Bras très hauts ou en élévation prolongée (> 45°)",
-
-    # BRAS (léger)
-    "G4 - Bras brièvement levés sans charge (≤ 5s, ≤ 2kg)",
-
-    # POIGNET / MAIN
-    "H4 - Poignet très fléchi ou en extension > 60°",
-
-    # GENOUX / ACCROUPISSEMENT / PIÉTINEMENT
-    "K4 - Accroupi ≤ 5s, obstacle < 500mm ou piétinement latéral > 30%",
-    "K5 - Accroupi > 5s ou piétinement arrière > 30% ou déplacement rapide"
-]
-
-FREQ_CLASSES = [(0, 10), (11, 30), (31, 67), (68, 120), (121, 190), (191, 290), (291, 490), (491, 720), (721, float('inf'))]
-POIDS_CLASSES = [(1.01, 2), (2.01, 4), (4.01, 6), (6.01, 9), (9.01, 12), (12.01, 15), (15.01, 20), (20.01, 25), (25.01, float('inf'))]
-GRILLE_EFFORT = [
-    [1,1,2,2,3,4,4,5,5],
-    [1,2,2,3,3,3,4,4,5],
-    [2,2,3,3,3,4,4,5,5],
-    [2,3,3,3,4,4,5,5,5],
-    [2,3,3,4,5,5,5,5,5],
-    [3,3,4,5,5,5,5,5,5],
-    [3,4,5,5,5,5,5,5,5],
-    [4,5,5,5,5,5,5,5,5],
-    [4,5,5,5,5,5,5,5,5]
-]
-
-COTATION_POSTURE = [
-    [1, 1, 1, 1],
-    [1, 2, 2, 2],
-    [1, 2, 3, 3],
-    [2, 3, 4, 5],
-    [4, 4, 5, 5]
-]
-POSTURE_FREQ_CLASSES = [(0, 10), (11, 100), (101, 400), (401, float('inf'))]
-
-def get_cotation_cognitif(nb_contraintes, engagement_rg):
-    if engagement_rg == "> 100%":
-        return 5
-    elif nb_contraintes >= 2:
-        return 4
-    else:
-        return 3
-
-def get_posture_level(max_level, total_freq):
-    for i, (f_min, f_max) in enumerate(POSTURE_FREQ_CLASSES):
-        if f_min <= total_freq <= f_max:
-            return COTATION_POSTURE[max_level - 1][i]
-    return 5
-
-def get_effort_level_global(poids_moyen, freq):
-    if poids_moyen <= 1:
-        return 3
-    freq_idx = next((i for i, (f_min, f_max) in enumerate(FREQ_CLASSES) if f_min <= freq <= f_max), len(FREQ_CLASSES)-1)
-    poids_idx = next((j for j, (p_min, p_max) in enumerate(POIDS_CLASSES) if p_min <= poids_moyen <= p_max), len(POIDS_CLASSES)-1)
-    return GRILLE_EFFORT[freq_idx][poids_idx]
 
 if "operations" not in st.session_state:
     st.session_state.operations = []
@@ -145,7 +65,14 @@ with st.form("form_op"):
             elif pondérations:
                 coeff = max(PONDERATIONS[m] for m in pondérations)
             effort_pondere = poids * coeff
-            niveau_posture = max([int(p[1]) for p in postures if p[1].isdigit()] + [3])
+            # Extraire les niveaux des postures
+            niveaux = [int(p[1]) for p in postures if p[1].isdigit()]
+            niveau_posture = max(niveaux + [3])
+
+            # Majoration si deux postures de niveau 4
+            if niveaux.count(4) >= 2:
+                niveau_posture = 5
+
             st.session_state.operations.append({
                 "op": nom_op, "postures": postures, "freq_posture": freq_posture,
                 "poids": poids, "freq_effort": freq_effort, "effort_pondere": effort_pondere,
@@ -163,6 +90,31 @@ LIBELLES_COGNITIF = {
     "N2": "Accessibilité difficile",
     "N3": "Ajustement/indexage délicat"
 }
+
+# EXTRACTION DES EFFORTS PONDÉRÉS
+efforts_pondérés = [op["effort_pondere"] for op in st.session_state.operations if op["effort_pondere"] > 0]
+frequences_efforts = [op["freq_effort"] for op in st.session_state.operations if op["effort_pondere"] > 0]
+
+# CALCUL DES CHARGES SIGNIFICATIVES
+if efforts_pondérés:
+    effort_max = max(efforts_pondérés)
+    seuil_significatif = 0.75 * effort_max
+    efforts_significatifs = [
+        (op["effort_pondere"], op["freq_effort"])
+        for op in st.session_state.operations
+        if op["effort_pondere"] >= seuil_significatif
+    ]
+    total_freq_significative = sum(freq for _, freq in efforts_significatifs)
+    if total_freq_significative > 0:
+        effort_moyen_significatif = sum(e * f for e, f in efforts_significatifs) / total_freq_significative
+    else:
+        effort_moyen_significatif = 0
+else:
+    effort_max = 0
+    seuil_significatif = 0
+    effort_moyen_significatif = 0
+    total_freq_significative = 0
+
 
 total_freq_posture = 0
 max_posture_level = 0
@@ -185,7 +137,7 @@ for i, op in enumerate(st.session_state.operations):
         st.write(f"**{i+1}. {op['op']}**")
         st.write("Postures :", ", ".join(op['postures']) or "Aucune")
         st.write("Fréquence posture :", op['freq_posture'])
-        st.write("Effort pondéré :", round(op['effort_pondere'], 2), "kg")
+        st.write(f"Effort pondéré : {round(op['effort_pondere'], 2)} kg (Fréquence : {op['freq_effort']} f/h)")
         st.write("Pondérations :", ", ".join(op['pondérations']) or "Aucune")
         contraintes_cognitives = [
     LIBELLES_COGNITIF[k] for k in ["N1", "N2", "N3"] if op.get(k)
@@ -211,17 +163,24 @@ engagement_rg = st.selectbox("Engagement RG (%)", ["< 95%", "95% - 100%", "> 100
 
 if st.session_state.operations:
     st.header("\U0001F4CA Cotation globale du poste")
-    niveau_posture = get_posture_level(max_posture_level, total_freq_posture)
+    niveau_posture, freq_par_niveau = get_cotation_posture_finale(st.session_state.operations)
     posture_explication = []
-    if high_movement or rear_stepping:
+    if high_movement:
         niveau_posture = 5
-        posture_explication.append("Forcé par facteur global déplacement/piétinement arrière")
+        posture_explication.append("Majoration posture : déplacement > 20m/min")
+
+    if rear_stepping:
+        niveau_posture = 5
+        posture_explication.append("Majoration posture : piétinement arrière > 30%")
+
     elif niveau_posture < 4 and lateral_stepping:
         niveau_posture = 4
-        posture_explication.append("Forcé par facteur global piétinement latéral")
+        posture_explication.append("Majoration posture : piétinement latéral")
 
     effort_moyen = total_effort_x_freq / total_freq_effort if total_freq_effort else 0
-    niveau_effort = get_effort_level_global(effort_moyen, total_freq_effort)
+    niveau_effort_global = get_effort_level_global(effort_moyen, total_freq_effort)
+    niveau_effort_significatif = get_effort_level_global(effort_moyen_significatif, total_freq_significative)
+    niveau_effort = max(niveau_effort_global, niveau_effort_significatif)
     
     nb_contraintes_cognitives = cognitif_count  # N1, N2, N3 déjà comptés
 
@@ -236,30 +195,52 @@ if st.session_state.operations:
     if engagement_rg == "95% - 100%":
             nb_contraintes_cognitives += 1
 
+    # Calcule la fréquence cumulée des postures de niveau 5
+    freq_niv5 = sum(
+        op.get("freq_posture", 0)
+        for op in st.session_state.operations
+        if op.get("niveau_posture") == 5
+    )
+
+    # Ajustement si niveau 5 avec faible fréquence
+    if niveau_posture == 4 and freq_niv5 <= 10:
+    # On vérifie s'il existe au moins une opération avec posture de niveau 5 ET effort ≤ 6 kg
+        posture5_effort_faible = any(
+            op.get("niveau_posture") == 5 and op.get("effort_pondere", 999) <= 6
+            for op in st.session_state.operations
+        )
+        if posture5_effort_faible:
+            niveau_posture = 3
+            posture_explication.append("Ajustement : posture 5 ≤10 f/h avec effort ≤ 6 kg → niveau 3")
 
     
     niveau_cognitif = get_cotation_cognitif(nb_contraintes_cognitives, engagement_rg)
 
-    st.write("**Détail des calculs posture :**")
-    st.write(f"→ Niveau maximal observé dans les opérations = {max_posture_level}")
-    st.write(f"→ Fréquence totale des postures = {total_freq_posture}")
-    st.write(f"→ Cotation initiale calculée selon grille = {get_posture_level(max_posture_level, total_freq_posture)}")
+    st.write("**Cotation POSTURE :**", freq_par_niveau)
+    st.write(f"→ Cotation finale posture : **Niveau {niveau_posture}**")
+
     if posture_explication:
-        st.write(f"→ Ajustée à {niveau_posture} à cause de : {', '.join(posture_explication)}")
-    else:
-        st.write(f"→ Cotation finale posture = {niveau_posture}")
+        st.markdown("**Explication(s) liée(s) à la posture :**")
+        for exp in posture_explication:
+            st.markdown(f"- {exp}")
 
 
-    st.write("**Détail des calculs effort :**")
-    st.write(f"→ Somme (poids pondéré × fréquence) = {total_effort_x_freq:.2f}")
-    st.write(f"→ Somme des fréquences = {total_freq_effort}")
-    st.write(f"→ Poids moyen pondéré = {effort_moyen:.2f} kg → Niveau {niveau_effort}")
 
-    st.write("**Détail des calculs cognitif :**")
+    st.write("**Cotation EFFORT :**")
+    st.write(f"→ Moyenne pondérée de **tous les efforts pondérés** = {effort_moyen:.2f} kg")
+    st.write(f"→ Fréquence totale associée = {total_freq_effort}")
+
+    st.write(f"→ Moyenne pondérée des **charges significatives** (≥ 75% de {effort_max:.2f} kg) = {effort_moyen_significatif:.2f} kg")
+    st.write(f"→ Fréquence totale significative = {total_freq_significative}")
+
+    st.write(f"→ Cotation effort retenue = **Niveau {niveau_effort}**")
+
+
+
+    st.write("**Cotation COGNITIF :**")
     st.write(f"→ Nombre d'opérations avec contrainte cognitive = {cognitif_count}")
 
     
-    st.write("**Détail des calculs cognitifs :**")
     st.write(f"→ Engagement RG = {engagement_rg}")
     st.write(f"→ Contraintes cognitives : {nb_contraintes_cognitives} détectées")
 
@@ -283,9 +264,8 @@ if st.session_state.operations:
     st.success(f"➡️ Cotation finale : **{cotation}**")
     st.session_state['cotation'] = cotation
 else:
-     st.info("Ajoute au moins une opération pour calculer la cotation globale.")
-    
-    
+    st.info("Ajoute au moins une opération pour calculer la cotation globale.")
+
 
 
 class PDF(FPDF):
@@ -348,6 +328,9 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     pdf.set_fill_color(255, 255, 255)
     pdf.multi_cell(0, 8, f"Poids moyen pondéré : {effort_moyen:.2f} kg")
     pdf.multi_cell(0, 8, f"Fréquence cumulée : {total_freq_effort}")
+    if total_freq_significative > 0:
+        pdf.multi_cell(0, 8, f"Effort pondéré des charges significatives : {effort_moyen_significatif:.2f} kg (>= 75% de {effort_max:.2f} kg)")
+        pdf.multi_cell(0, 8, f"Fréquence significative totale : {total_freq_significative}")
 
     # COGNITIF
     pdf.set_font("Arial", "B", 12)
@@ -360,19 +343,40 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     pdf.multi_cell(0, 8, f"Engagement RG : {engagement_rg}")
     if contraintes_detectees:
         pdf.multi_cell(0, 8, "Contraintes globales : " + ", ".join(contraintes_detectees))
-    pdf.multi_cell(0, 8, f"Contraintes N1/N2/N3 : {cognitif_count}")
+    contraintes_n123 = [LIBELLES_COGNITIF[k] for k in ["N1", "N2", "N3"] if any(op.get(k) for op in st.session_state.operations)]
+    if contraintes_n123:
+        contraintes_str = ", ".join(set(contraintes_n123))
+        pdf.multi_cell(0, 8, f"Contraintes N1/N2/N3 : {len(contraintes_n123)} ({contraintes_str})")
+    else:
+        pdf.multi_cell(0, 8, "Contraintes N1/N2/N3 : 0")
+
 
     # JUSTIFICATION
     pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 10, "Justification Cotation Finale", ln=True)
     pdf.set_font("Arial", "", 11)
+
+    details_niveaux = {
+        "Posture": niveau_posture,
+        "Effort": niveau_effort,
+        "Cognitif": niveau_cognitif
+    }
+
+    niveaux_4 = [k for k, v in details_niveaux.items() if v == 4]
+    niveaux_5 = [k for k, v in details_niveaux.items() if v == 5]
+
     if cotation.startswith("P1"):
-        justification = "Poste classé en P1 car au moins 2 critères sont à 4 ou 1 critère à 5"
+        if niveaux_5:
+            justification = f"Poste classé en P1 car le critère {', '.join(niveaux_5)} est à 5"
+        else:
+            justification = f"Poste classé en P1 car au moins deux critères sont à 4 : {', '.join(niveaux_4)}"
     elif cotation.startswith("P2"):
-        justification = "Poste classé en P2 car un seul critère est à 4"
+        justification = f"Poste classé en P2 car un seul critère est à 4 : {', '.join(niveaux_4)}"
     else:
         justification = "Poste classé en P3 car tous les critères sont à 3 ou moins"
+
     pdf.multi_cell(0, 8, justification)
+
 
     # OPÉRATIONS
     pdf.set_font("Arial", "B", 12)
