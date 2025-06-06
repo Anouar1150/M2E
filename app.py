@@ -258,6 +258,10 @@ class PDF(FPDF):
             return (255, 255, 153)  # Jaune
         else:
             return (255, 255, 255)  # Blanc (pas de fond)
+        
+def safe_text(text):
+    return text.encode('latin-1', 'replace').decode('latin-1')
+
 if st.button("📄 Télécharger la synthèse en PDF"):
 
     pdf = PDF()
@@ -266,11 +270,10 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     pdf.cell(0, 10, "Synthèse Cotation Ergonomique - Méthode M2E", ln=True)
 
     pdf.set_font("Arial", "", 12)
-    pdf.cell(0, 10, f"Département : {departement}", ln=True)
-    pdf.cell(0, 10, f"UET : {uet}", ln=True)
-    pdf.cell(0, 10, f"Poste : {poste}", ln=True)
-    pdf.cell(0, 10, f"Date de cotation : {date_cotation.strftime('%d/%m/%Y')}", ln=True)
-    pdf.cell(0, 10, f"Évaluateur : {evaluateur}", ln=True)
+    pdf.cell(0, 10, safe_text(f"Département : {departement}"), ln=True)
+    pdf.cell(0, 10, safe_text(f"UET : {uet}"), ln=True)
+    pdf.cell(0, 10, safe_text(f"Poste : {poste}"), ln=True)
+    pdf.cell(0, 10, safe_text(f"Évaluateur : {evaluateur}"), ln=True)
     pdf.ln(5)
 
     # Couleur selon cotation finale
@@ -298,7 +301,7 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     pdf.multi_cell(0, 8, f"Niveau max observé : {max_posture_level}")
     pdf.multi_cell(0, 8, f"Fréquence cumulée : {total_freq_posture}")
     if posture_explication:
-        pdf.multi_cell(0, 8, f"Ajustement(s) : {', '.join(posture_explication)}")
+        pdf.multi_cell(0, 8, safe_text(f"Ajustement(s) : {', '.join(posture_explication)}"))
 
     # EFFORT
     pdf.set_font("Arial", "B", 12)
@@ -366,15 +369,15 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     pdf.set_font("Arial", "", 11)
 
     for idx, op in enumerate(st.session_state.operations, 1):
-        pdf.cell(0, 8, f"{idx}. {op['op']}", ln=True)
+        pdf.cell(0, 8, safe_text(f"{idx}. {op['op']}"), ln=True)
         if op['postures']:
-            pdf.cell(0, 8, f"   - Postures : {', '.join(op['postures'])}", ln=True)
+            pdf.cell(0, 8, safe_text(f"   - Postures : {', '.join(op['postures'])}"), ln=True)
             pdf.cell(0, 8, f"   - Fréquence postures : {op['freq_posture']} f/h", ln=True)
         if op['poids'] > 0:
             pdf.cell(0, 8, f"   - Poids : {op['poids']} kg", ln=True)
             pdf.cell(0, 8, f"   - Effort pondéré : {round(op['effort_pondere'], 2)} kg", ln=True)
         if op['pondérations']:
-            pdf.cell(0, 8, f"   - Pondérations : {', '.join(op['pondérations'])}", ln=True)
+            pdf.cell(0, 8, safe_text(f"   - Pondérations : {', '.join(op['pondérations'])}"), ln=True)
         contraintes = [LIBELLES_COGNITIF[k] for k in ["N1", "N2", "N3"] if op.get(k)]
         if contraintes:
             pdf.cell(0, 8, f"   - Contraintes cognitives : {', '.join(contraintes)}", ln=True)
