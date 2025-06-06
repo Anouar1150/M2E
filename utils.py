@@ -1,3 +1,5 @@
+import streamlit as st
+
 POSTURE_FREQ_CLASSES = [(0, 10), (11, 100), (101, 400), (401, float('inf'))]
 
 COTATION_POSTURE = [
@@ -138,3 +140,19 @@ def get_effort_level_global(poids_moyen, freq):
         )
 
     return effort_table[freq_idx][poids_idx]
+
+def reset_champs_si_requis():
+    import streamlit as st
+    if st.session_state.get("reset_required", False):
+        for champ in ["nom_op", "postures", "freq_posture", "poids", "freq_effort", "pondérations", "N1", "N2", "N3"]:
+            if champ in ["N1", "N2", "N3"]:
+                st.session_state[champ] = False
+            elif champ in ["postures", "pondérations"]:
+                st.session_state[champ] = []
+            elif champ == "poids":
+                st.session_state[champ] = 0.0
+            elif champ in ["freq_posture", "freq_effort"]:
+                st.session_state[champ] = 0
+            else:
+                st.session_state[champ] = ""
+        st.session_state.reset_required = False

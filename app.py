@@ -6,6 +6,7 @@ from utils import (
     get_cotation_posture_finale, 
     get_effort_level_global,
     ajuster_niveau_posture_selon_conditions,
+    reset_champs_si_requis,
     POIDS_CLASSES, 
     FREQ_CLASSES, 
     effort_table
@@ -21,6 +22,8 @@ POSTURES_NIVEAU_4_5 = constants["postures_niveau_4_5"]
 
 st.set_page_config(page_title="Cotation M2E", layout="wide")
 st.title("\U0001F4CB Cotation Ergonomique M2E - Vie Série")
+
+reset_champs_si_requis()
 
 # ⚠️ Initialisation ici avant tout appel à .operations
 if "operations" not in st.session_state:
@@ -43,25 +46,39 @@ st.markdown(f"- **Poste** : {poste}")
 st.markdown(f"- **Date de cotation** : {date_cotation.strftime('%d/%m/%Y')}")
 st.markdown(f"- **Évaluateur** : {evaluateur}")
 
+# ✅ Ne pas utiliser "form_op" ici
+if "form_values" not in st.session_state:
+    st.session_state.form_values = {
+        "nom_op": "",
+        "postures": [],
+        "freq_posture": 0,
+        "poids": 0.0,
+        "freq_effort": 0,
+        "pondérations": [],
+        "N1": False,
+        "N2": False,
+        "N3": False,
+    }
 
 st.header("Ajouter une opération")
-with st.form("form_op"):
-    nom_op = st.text_input("Nom de l'opération")
-    postures = st.multiselect("Postures contraignantes :", POSTURES_NIVEAU_4_5)
-    freq_posture = st.number_input("Fréquence horaire postures", min_value=0)
-    poids = st.number_input("Poids ou effort estimé (kg)", min_value=0.0)
-    freq_effort = st.number_input("Fréquence horaire effort", min_value=0)
-    pondérations = st.multiselect("Pondérations :", list(PONDERATIONS.keys()))
-    N1 = st.checkbox("N1 - Travail en aveugle")
-    N2 = st.checkbox("N2 - Accessibilité difficile")
-    N3 = st.checkbox("N3 - Ajustement/indexage délicat")
+with st.form("ajout_operation"):
+    nom_op = st.text_input("Nom de l'opération", key="nom_op")
+    postures = st.multiselect("Postures contraignantes :", POSTURES_NIVEAU_4_5, key="postures")
+    freq_posture = st.number_input("Fréquence horaire postures", min_value=0, key="freq_posture")
+    poids = st.number_input("Poids ou effort estimé (kg)", min_value=0.0, key="poids")
+    freq_effort = st.number_input("Fréquence horaire effort", min_value=0, key="freq_effort")
+    pondérations = st.multiselect("Pondérations :", list(PONDERATIONS.keys()), key="pondérations")
+    N1 = st.checkbox("N1 - Travail en aveugle", key="N1")
+    N2 = st.checkbox("N2 - Accessibilité difficile", key="N2")
+    N3 = st.checkbox("N3 - Ajustement/indexage délicat", key="N3")
+
     submitted = st.form_submit_button("Ajouter l'opération")
+
     if submitted:
-        # Vérifications conditionnelles
         if postures and freq_posture == 0:
-            st.error("⚠️ Tu as sélectionné des postures contraignantes mais pas de fréquence horaire. Merci de la renseigner.")
+            st.error("⚠️ Tu as sélectionné des postures contraignantes mais pas de fréquence horaire.")
         elif poids > 0 and freq_effort == 0:
-            st.error("⚠️ Tu as indiqué un poids ou effort mais pas de fréquence horaire. Merci de la renseigner.")
+            st.error("⚠️ Tu as indiqué un poids mais pas de fréquence horaire.")
         else:
             coeff = 1.0
             if len([m for m in pondérations if m in ["M3", "M4", "M5", "M6", "M7", "M8", "M9", "M10"]]) >= 2:
@@ -69,11 +86,8 @@ with st.form("form_op"):
             elif pondérations:
                 coeff = max(PONDERATIONS[m] for m in pondérations)
             effort_pondere = poids * coeff
-            # Extraire les niveaux des postures
             niveaux = [int(p[1]) for p in postures if p[1].isdigit()]
             niveau_posture = max(niveaux + [3])
-
-            # Majoration si deux postures de niveau 4
             if niveaux.count(4) >= 2:
                 niveau_posture = 5
 
@@ -85,6 +99,10 @@ with st.form("form_op"):
                 "N1": N1, "N2": N2, "N3": N3
             })
             st.success("✅ Opération ajoutée !")
+            st.session_state.reset_required = True
+            st.rerun()
+
+
 
 
 st.header("Opérations enregistrées")
