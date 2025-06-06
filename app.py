@@ -5,10 +5,12 @@ from utils import (
     get_cotation_cognitif, 
     get_cotation_posture_finale, 
     get_effort_level_global,
+    ajuster_niveau_posture_selon_conditions,
     POIDS_CLASSES, 
     FREQ_CLASSES, 
     effort_table
 )
+
 import yaml
 with open("constants.yaml", "r", encoding="utf-8") as f:
     constants = yaml.safe_load(f)
@@ -19,6 +21,10 @@ POSTURES_NIVEAU_4_5 = constants["postures_niveau_4_5"]
 
 st.set_page_config(page_title="Cotation M2E", layout="wide")
 st.title("\U0001F4CB Cotation Ergonomique M2E - Vie Série")
+
+# ⚠️ Initialisation ici avant tout appel à .operations
+if "operations" not in st.session_state:
+    st.session_state.operations = []
 
 
 # Affichage des informations du poste dans la barre latérale
@@ -37,8 +43,6 @@ st.markdown(f"- **Poste** : {poste}")
 st.markdown(f"- **Date de cotation** : {date_cotation.strftime('%d/%m/%Y')}")
 st.markdown(f"- **Évaluateur** : {evaluateur}")
 
-if "operations" not in st.session_state:
-    st.session_state.operations = []
 
 st.header("Ajouter une opération")
 with st.form("form_op"):
@@ -149,9 +153,6 @@ for i, op in enumerate(st.session_state.operations):
             st.session_state.operations.pop(i)
             st.rerun()
 
-
-        
-
 st.header("Facteurs globaux du poste")
 high_movement = st.checkbox("Déplacement > 20m/min (Posture = 5, P1 direct)")
 rear_stepping = st.checkbox("Piétinement arrière > 30% (Posture = 5)")
@@ -164,18 +165,16 @@ engagement_rg = st.selectbox("Engagement RG (%)", ["< 95%", "95% - 100%", "> 100
 if st.session_state.operations:
     st.header("\U0001F4CA Cotation globale du poste")
     niveau_posture, freq_par_niveau = get_cotation_posture_finale(st.session_state.operations)
-    posture_explication = []
-    if high_movement:
-        niveau_posture = 5
-        posture_explication.append("Majoration posture : déplacement > 20m/min")
 
-    if rear_stepping:
-        niveau_posture = 5
-        posture_explication.append("Majoration posture : piétinement arrière > 30%")
+    # Appel ici, avec tous les paramètres prêts
+    niveau_posture, posture_explication = ajuster_niveau_posture_selon_conditions(
+        operations=st.session_state.operations,
+        niveau_posture=niveau_posture,
+        high_movement=high_movement,
+        rear_stepping=rear_stepping,
+        lateral_stepping=lateral_stepping
+    )
 
-    elif niveau_posture < 4 and lateral_stepping:
-        niveau_posture = 4
-        posture_explication.append("Majoration posture : piétinement latéral")
 
     effort_moyen = total_effort_x_freq / total_freq_effort if total_freq_effort else 0
     niveau_effort_global = get_effort_level_global(effort_moyen, total_freq_effort)
@@ -195,23 +194,6 @@ if st.session_state.operations:
     if engagement_rg == "95% - 100%":
             nb_contraintes_cognitives += 1
 
-    # Calcule la fréquence cumulée des postures de niveau 5
-    freq_niv5 = sum(
-        op.get("freq_posture", 0)
-        for op in st.session_state.operations
-        if op.get("niveau_posture") == 5
-    )
-
-    # Ajustement si niveau 5 avec faible fréquence
-    if niveau_posture == 4 and freq_niv5 <= 10:
-    # On vérifie s'il existe au moins une opération avec posture de niveau 5 ET effort ≤ 6 kg
-        posture5_effort_faible = any(
-            op.get("niveau_posture") == 5 and op.get("effort_pondere", 999) <= 6
-            for op in st.session_state.operations
-        )
-        if posture5_effort_faible:
-            niveau_posture = 3
-            posture_explication.append("Ajustement : posture 5 ≤10 f/h avec effort ≤ 6 kg → niveau 3")
 
     
     niveau_cognitif = get_cotation_cognitif(nb_contraintes_cognitives, engagement_rg)

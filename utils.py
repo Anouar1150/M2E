@@ -71,6 +71,53 @@ def get_cotation_posture_finale(operations):
         return max(cotation_candidates), freq_by_level
     else:
         return 3, freq_by_level  # valeur par défaut
+    
+def ajuster_niveau_posture_selon_conditions(operations, niveau_posture, high_movement=False, rear_stepping=False, lateral_stepping=False):
+    """Ajuste le niveau de posture global en fonction :
+    - des opérations niveau 5 à faible fréquence
+    - de l’effort pondéré
+    - des facteurs globaux s’ils sont plus contraignants
+    """
+    posture_explication = []
+
+    freq_niv5 = sum(
+        op.get("freq_posture", 0)
+        for op in operations
+        if op.get("niveau_posture") == 5
+    )
+
+    posture5_le6kg = False
+    posture5_gt6kg = False
+
+    if freq_niv5 <= 10:
+        for op in operations:
+            if op.get("niveau_posture") == 5 and op.get("freq_posture", 0) <= 10:
+                effort = op.get("effort_pondere", 999)
+                if effort <= 6:
+                    posture5_le6kg = True
+                else:
+                    posture5_gt6kg = True
+
+        if posture5_gt6kg:
+            niveau_posture = 4
+            posture_explication.append("Ajustement posture : posture 5 ≤10 f/h avec effort >6 kg → posture 4")
+        elif posture5_le6kg:
+            niveau_posture = 3
+            posture_explication.append("Ajustement posture : posture 5 ≤10 f/h avec effort ≤6 kg → posture 3")
+
+    # Facteurs globaux : écrasent si plus contraignants
+    if high_movement:
+        niveau_posture = max(niveau_posture, 5)
+        posture_explication.append("Majoration posture : déplacement > 20m/min")
+    if rear_stepping:
+        niveau_posture = max(niveau_posture, 5)
+        posture_explication.append("Majoration posture : piétinement arrière > 30%")
+    if lateral_stepping:
+        niveau_posture = max(niveau_posture, 4)
+        posture_explication.append("Majoration posture : piétinement latéral > 30%")
+
+    return niveau_posture, posture_explication
+
 
 
 def get_effort_level_global(poids_moyen, freq):
