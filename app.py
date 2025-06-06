@@ -10,7 +10,7 @@ from utils import (
     FREQ_CLASSES, 
     effort_table
 )
-
+import unicodedata
 import yaml
 with open("constants.yaml", "r", encoding="utf-8") as f:
     constants = yaml.safe_load(f)
@@ -380,8 +380,11 @@ if st.button("📄 Télécharger la synthèse en PDF"):
             pdf.cell(0, 8, f"   - Contraintes cognitives : {', '.join(contraintes)}", ln=True)
         pdf.ln(1)
 
-    #Formatage de la date en AAAA-MM-JJ
+    
+
     nom_fichier = f"M2E_{departement}_{uet}_{poste}_{date_cotation.strftime('%Y-%m-%d')}.pdf".replace(" ", "_")
+    nom_fichier = unicodedata.normalize("NFKD", nom_fichier).encode("ASCII", "ignore").decode("ASCII")
+
 
     pdf.output(nom_fichier)
     with open(nom_fichier, "rb") as f:
