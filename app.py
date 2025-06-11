@@ -255,13 +255,13 @@ if st.session_state.operations:
 
     niveaux = [niveau_posture, niveau_effort, niveau_cognitif]
     if high_movement:
-        cotation = "P1 (Rouge)"
+        cotation = "P1 (Très contraignant)"
     elif niveaux.count(4) >= 2 or any(n == 5 for n in niveaux):
-        cotation = "P1 (Rouge)"
+        cotation = "P1 (Très contraignant)"
     elif niveaux.count(4) == 1:
-        cotation = "P2 (Jaune)"
+        cotation = "P2 (Contraignant)"
     else:
-        cotation = "P3 (Vert)"
+        cotation = "P3 (Recommandé)"
     st.success(f"➡️ Cotation finale : **{cotation}**")
     st.session_state['cotation'] = cotation
 else:
