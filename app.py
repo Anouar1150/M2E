@@ -296,7 +296,7 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     pdf.ln(5)
 
     # Couleur selon cotation finale
-    cotation = st.session_state.get("cotation", "P3 (Vert)")
+    cotation = st.session_state.get("cotation", "P3 (Recommandé)")
     if cotation.startswith("P1"):
         pdf.set_fill_color(255, 102, 102)
     elif cotation.startswith("P2"):
