@@ -12,6 +12,7 @@ from utils import (
     effort_table
 )
 import unicodedata
+import re
 import yaml
 with open("constants.yaml", "r", encoding="utf-8") as f:
     constants = yaml.safe_load(f)
@@ -403,12 +404,18 @@ if st.button("📄 Télécharger la synthèse en PDF"):
 
     
 
+    # Construction initiale du nom de fichier
     nom_fichier = f"M2E_{departement}_{uet}_{poste}_{date_cotation.strftime('%Y-%m-%d')}.pdf".replace(" ", "_")
+
+    # Normalisation Unicode (remplacement des caractères accentués)
     nom_fichier = unicodedata.normalize("NFKD", nom_fichier).encode("ASCII", "ignore").decode("ASCII")
 
+    # Nettoyage des caractères interdits dans un nom de fichier
+    nom_fichier = re.sub(r'[\/\\:*?"<>|\x00-\x1F]', '_', nom_fichier)
+    nom_fichier = re.sub(r'_+', '_', nom_fichier).strip('_ ')
 
     pdf.output(nom_fichier)
+
     with open(nom_fichier, "rb") as f:
         st.download_button("📥 Télécharger le PDF", f, file_name=nom_fichier)
-
 
