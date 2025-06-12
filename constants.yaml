@@ -14,19 +14,19 @@ ponderations:
 
 postures_niveau_4_5:
   - A4 - Dos penché sans appui ou avec charge / durée (30°-60°)
-  - A5 - Dos penché sans appui ou avec charge / durée (>60°)
+  - A5 - Dos penché sans appui ou avec charge / durée (> 60°)
   - B4 - Dos penché avec appui stable, courte durée et effort <2kg (30°-60°)
   - B5 - Dos penché avec appui stable, courte durée et effort <2kg (>60°)
   - C4 - Inclinaison latérale du tronc (30°-60°)
   - C5 - Inclinaison latérale du tronc > 60°
   - D4 - Rotation tronc modérée (45°-90°) ou inclinaison avec maintien
-  - D5 - Rotation tronc importante ≥ 90° ou forte inclinaison prolongée
+  - D5 - Rotation tronc importante > 90° ou forte inclinaison prolongée
   - E4 - Inclinaison tête >30° ou rotation 45°-90° (durée > 5s)
-  - E5 - Rotation tête ≥ 90° ou forte extension arrière
+  - E5 - Rotation tête > 90° ou forte extension arrière
   - F4 - Bras levés / tendus avec charge ou durée > 5s
   - F5 - Bras très hauts ou en élévation prolongée (> 45°)
-  - G4 - Bras brièvement levés sans charge (≤ 5s, ≤ 2kg)
+  - G4 - Bras brièvement levés sans charge (< 5s, < 2kg)
   - H4 - Poignet très fléchi ou en extension > 60°
-  - K4 - Accroupi ≤ 5s, obstacle < 500mm ou piétinement latéral > 30%
+  - K4 - Accroupi < 5s, obstacle < 500mm ou piétinement latéral > 30%
   - K5 - Accroupi > 5s ou piétinement arrière > 30% ou déplacement rapide
 

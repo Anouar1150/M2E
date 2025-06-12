@@ -333,7 +333,7 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     pdf.multi_cell(0, 8, f"Poids moyen pondéré : {effort_moyen:.2f} kg")
     pdf.multi_cell(0, 8, f"Fréquence cumulée : {total_freq_effort}")
     if total_freq_significative > 0:
-        pdf.multi_cell(0, 8, f"Effort pondéré des charges significatives : {effort_moyen_significatif:.2f} kg (>= 75% de {effort_max:.2f} kg)")
+        pdf.multi_cell(0, 8, f"Effort pondéré des charges significatives : {effort_moyen_significatif:.2f} kg (> 75% de {effort_max:.2f} kg)")
         pdf.multi_cell(0, 8, f"Fréquence significative totale : {total_freq_significative}")
 
     # COGNITIF
