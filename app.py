@@ -62,24 +62,31 @@ if "form_values" not in st.session_state:
         "N3": False,
     }
 
-st.header("Ajouter une opération")
+st.header("➕ Ajouter une opération")
 with st.form("ajout_operation"):
     nom_op = st.text_input("Nom de l'opération", key="nom_op")
+
+    st.markdown("**Postures**")
     postures = st.multiselect("Postures contraignantes :", POSTURES_NIVEAU_4_5, key="postures")
-    freq_posture = st.number_input("Fréquence horaire postures", min_value=0, key="freq_posture")
+    freq_posture = st.number_input("Fréquence horaire postures (f/h)", min_value=0, key="freq_posture")
+    point_dur_posture = st.checkbox("Point dur lié à la posture", key="point_dur_posture")
+
+    st.markdown("**Effort**")
     poids = st.number_input("Poids ou effort estimé (kg)", min_value=0.0, key="poids")
-    freq_effort = st.number_input("Fréquence horaire effort", min_value=0, key="freq_effort")
-    pondérations = st.multiselect("Pondérations :", list(PONDERATIONS.keys()), key="pondérations")
+    freq_effort = st.number_input("Fréquence horaire effort (f/h)", min_value=0, key="freq_effort")
+    pondérations = st.multiselect("Pondérations présentes :", list(PONDERATIONS.keys()), key="pondérations")
+    point_dur_effort = st.checkbox("Point dur lié à l'effort", key="point_dur_effort")
+
+    st.markdown("**Contraintes cognitives**")
     N1 = st.checkbox("N1 - Travail en aveugle", key="N1")
     N2 = st.checkbox("N2 - Accessibilité difficile", key="N2")
     N3 = st.checkbox("N3 - Ajustement/indexage délicat", key="N3")
-    st.markdown("---")  # Séparation visuelle
-    point_dur_posture = st.checkbox("Point dur lié à la posture", key="point_dur_posture")
-    point_dur_effort = st.checkbox("Point dur lié à l'effort", key="point_dur_effort")
-    with st.expander("Ajouter un commentaire libre (optionnel)"):
-        commentaire = st.text_area("Commentaire", key="commentaire_op")
 
-    submitted = st.form_submit_button("Ajouter l'opération")
+    with st.expander("📝 Commentaire (optionnel)"):
+        commentaire = st.text_area("Commentaire libre sur l’opération", key="commentaire_op")
+
+    submitted = st.form_submit_button("✅ Ajouter l'opération")
+
 
     if submitted:
         if postures and freq_posture == 0:
