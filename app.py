@@ -75,7 +75,8 @@ with st.form("ajout_operation"):
     N3 = st.checkbox("N3 - Ajustement/indexage délicat", key="N3")
     st.markdown("---")  # Séparation visuelle
     point_dur = st.checkbox("Point dur", key="point_dur")
-    commentaire = st.text_area("Commentaire", key="commentaire_op")
+    with st.expander("Ajouter un commentaire libre (optionnel)"):
+        commentaire = st.text_area("Commentaire", key="commentaire_op")
 
     submitted = st.form_submit_button("Ajouter l'opération")
 
@@ -175,7 +176,7 @@ for i, op in enumerate(st.session_state.operations):
             st.write("Point dur : Oui")
 
         if op.get("commentaire"):
-            st.write("📝 Commentaire :", op["commentaire"])
+            st.write("Commentaire :", op["commentaire"])
             
         st.markdown("---")
 
