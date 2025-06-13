@@ -102,7 +102,7 @@ def ajuster_niveau_posture_selon_conditions(operations, niveau_posture, high_mov
 
         if posture5_gt6kg:
             niveau_posture = 4
-            posture_explication.append("Ajustement posture : posture 5 < 10 f/h avec effort >6 kg → posture 4")
+            posture_explication.append("Ajustement posture : posture 5 < 10 f/h avec effort > 6 kg → posture 4")
         elif posture5_le6kg:
             niveau_posture = 3
             posture_explication.append("Ajustement posture : posture 5 < 10 f/h avec effort < 6 kg → posture 3")

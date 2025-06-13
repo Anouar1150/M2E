@@ -427,6 +427,10 @@ if st.button("📄 Télécharger la synthèse en PDF"):
         contraintes = [LIBELLES_COGNITIF[k] for k in ["N1", "N2", "N3"] if op.get(k)]
         if contraintes:
             pdf.cell(0, 8, f"   - Contraintes cognitives : {', '.join(contraintes)}", ln=True)
+        if op.get("point_dur"):
+            pdf.cell(0, 8, "   - Point dur : Oui", ln=True)
+        if op.get("commentaire"):
+            pdf.multi_cell(0, 8, safe_text(f"   - Commentaire : {op['commentaire']}"))
         pdf.ln(1)
 
     
