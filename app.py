@@ -29,6 +29,7 @@ reset_champs_si_requis()
 # ⚠️ Initialisation ici avant tout appel à .operations
 if "operations" not in st.session_state:
     st.session_state.operations = []
+operations = st.session_state.operations
 
 
 # Affichage des informations du poste dans la barre latérale
@@ -267,6 +268,10 @@ if st.session_state.operations:
 else:
     st.info("Ajoute au moins une opération pour calculer la cotation globale.")
 
+if not operations:
+    st.error("⚠️ Vous devez renseigner au moins une opération avant de générer le document.")
+    st.stop()  # stop l'exécution Streamlit proprement
+niveau_posture = niveau_posture if niveau_posture is not None else 3
 
 
 class PDF(FPDF):
@@ -313,7 +318,9 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     pdf.set_font("Arial", "B", 12)
     pdf.cell(0, 10, "Posture", ln=True)
     pdf.set_font("Arial", "", 11)
+    niveau_posture = niveau_posture if niveau_posture is not None else 3
     r, g, b = pdf.niveau_color(niveau_posture)
+    pdf.set_fill_color(r, g, b)
     pdf.set_fill_color(r, g, b)
     pdf.cell(0, 8, f"Niveau posture = {niveau_posture}", ln=True, fill=(niveau_posture >= 4))
     pdf.set_fill_color(255, 255, 255)
