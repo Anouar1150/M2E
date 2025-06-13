@@ -297,8 +297,8 @@ class PDF(FPDF):
             return (255, 102, 102)  # Rouge
         elif niveau == 4:
             return (255, 255, 153)  # Jaune
-        else:
-            return (255, 255, 255)  # Blanc (pas de fond)
+        else:  # Niveau 3 ou moins
+            return (153, 255, 153)  # Vert
         
 def safe_text(text):
     return text.encode('latin-1', 'replace').decode('latin-1')
@@ -338,8 +338,7 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     niveau_posture = niveau_posture if niveau_posture is not None else 3
     r, g, b = pdf.niveau_color(niveau_posture)
     pdf.set_fill_color(r, g, b)
-    pdf.set_fill_color(r, g, b)
-    pdf.cell(0, 8, f"Niveau posture = {niveau_posture}", ln=True, fill=(niveau_posture >= 4))
+    pdf.cell(0, 8, f"Niveau posture = {niveau_posture}", ln=True, fill=True)
     pdf.set_fill_color(255, 255, 255)
     pdf.multi_cell(0, 8, f"Niveau max observé : {max_posture_level}")
     pdf.multi_cell(0, 8, f"Fréquence cumulée : {total_freq_posture}")
@@ -352,7 +351,7 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     pdf.set_font("Arial", "", 11)
     r, g, b = pdf.niveau_color(niveau_effort)
     pdf.set_fill_color(r, g, b)
-    pdf.cell(0, 8, f"Niveau effort = {niveau_effort}", ln=True, fill=(niveau_effort >= 4))
+    pdf.cell(0, 8, f"Niveau effort = {niveau_effort}", ln=True, fill=True)
     pdf.set_fill_color(255, 255, 255)
     pdf.multi_cell(0, 8, f"Poids moyen pondéré : {effort_moyen:.2f} kg")
     pdf.multi_cell(0, 8, f"Fréquence cumulée : {total_freq_effort}")
@@ -366,7 +365,7 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     pdf.set_font("Arial", "", 11)
     r, g, b = pdf.niveau_color(niveau_cognitif)
     pdf.set_fill_color(r, g, b)
-    pdf.cell(0, 8, f"Niveau cognitif = {niveau_cognitif}", ln=True, fill=(niveau_cognitif >= 4))
+    pdf.cell(0, 8, f"Niveau cognitif = {niveau_cognitif}", ln=True, fill=True)
     pdf.set_fill_color(255, 255, 255)
     pdf.multi_cell(0, 8, f"Engagement RG : {engagement_rg}")
     if contraintes_detectees:
