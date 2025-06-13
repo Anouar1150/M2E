@@ -73,6 +73,9 @@ with st.form("ajout_operation"):
     N1 = st.checkbox("N1 - Travail en aveugle", key="N1")
     N2 = st.checkbox("N2 - Accessibilité difficile", key="N2")
     N3 = st.checkbox("N3 - Ajustement/indexage délicat", key="N3")
+    st.markdown("---")  # Séparation visuelle
+    point_dur = st.checkbox("Point dur", key="point_dur")
+    commentaire = st.text_area("Commentaire", key="commentaire_op")
 
     submitted = st.form_submit_button("Ajouter l'opération")
 
@@ -98,7 +101,7 @@ with st.form("ajout_operation"):
                 "poids": poids, "freq_effort": freq_effort, "effort_pondere": effort_pondere,
                 "pondérations": pondérations,
                 "niveau_posture": niveau_posture,
-                "N1": N1, "N2": N2, "N3": N3
+                "N1": N1, "N2": N2, "N3": N3,"point_dur": point_dur,"commentaire": commentaire
             })
             st.success("✅ Opération ajoutée !")
             st.session_state.reset_required = True
@@ -164,10 +167,18 @@ for i, op in enumerate(st.session_state.operations):
         st.write(f"Effort pondéré : {round(op['effort_pondere'], 2)} kg (Fréquence : {op['freq_effort']} f/h)")
         st.write("Pondérations :", ", ".join(op['pondérations']) or "Aucune")
         contraintes_cognitives = [
-    LIBELLES_COGNITIF[k] for k in ["N1", "N2", "N3"] if op.get(k)
-]
+            LIBELLES_COGNITIF[k] for k in ["N1", "N2", "N3"] if op.get(k)
+        ]
         st.write("Cognitif :", ", ".join(contraintes_cognitives) or "Aucune")
+
+        if op.get("point_dur"):
+            st.write("Point dur : Oui")
+
+        if op.get("commentaire"):
+            st.write("📝 Commentaire :", op["commentaire"])
+            
         st.markdown("---")
+
     with cols[1]:
         if st.button("❌", key=f"delete_{i}"):
             st.session_state.operations.pop(i)
@@ -253,9 +264,14 @@ if st.session_state.operations:
 
     st.write(f"→ Cotation cognitive = {niveau_cognitif}")
 
-
     niveaux = [niveau_posture, niveau_effort, niveau_cognitif]
-    if high_movement:
+    
+    # Détection d'au moins un point dur
+    point_dur_detecte = any(op.get("point_dur") for op in st.session_state.operations)
+
+    if point_dur_detecte:
+        cotation = "P1 (Très contraignant)"
+    elif high_movement:
         cotation = "P1 (Très contraignant)"
     elif niveaux.count(4) >= 2 or any(n == 5 for n in niveaux):
         cotation = "P1 (Très contraignant)"
@@ -263,6 +279,7 @@ if st.session_state.operations:
         cotation = "P2 (Contraignant)"
     else:
         cotation = "P3 (Recommandé)"
+
     st.success(f"➡️ Cotation finale : **{cotation}**")
     st.session_state['cotation'] = cotation
 else:
@@ -376,7 +393,9 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     niveaux_4 = [k for k, v in details_niveaux.items() if v == 4]
     niveaux_5 = [k for k, v in details_niveaux.items() if v == 5]
 
-    if cotation.startswith("P1"):
+    if point_dur_detecte:
+        justification = "Poste classé en P1 car une ou plusieurs opérations sont marquées comme point dur"
+    elif cotation.startswith("P1"):
         if niveaux_5:
             justification = f"Poste classé en P1 car le critère {', '.join(niveaux_5)} est à 5"
         else:
@@ -385,6 +404,7 @@ if st.button("📄 Télécharger la synthèse en PDF"):
         justification = f"Poste classé en P2 car un seul critère est à 4 : {', '.join(niveaux_4)}"
     else:
         justification = "Poste classé en P3 car tous les critères sont à 3 ou moins"
+
 
     pdf.multi_cell(0, 8, justification)
 
