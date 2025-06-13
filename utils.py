@@ -145,8 +145,8 @@ def reset_champs_si_requis():
     import streamlit as st
     if st.session_state.get("reset_required", False):
         for champ in ["nom_op", "postures", "freq_posture", "poids", "freq_effort", 
-                      "pondérations", "N1", "N2", "N3", "point_dur", "commentaire_op"]:
-            if champ in ["N1", "N2", "N3", "point_dur"]:
+                      "pondérations", "N1", "N2", "N3", "point_dur_posture", "point_dur_effort", "commentaire_op"]:
+            if champ in ["N1", "N2", "N3", "point_dur_posture", "point_dur_effort"]:
                 st.session_state[champ] = False
             elif champ in ["postures", "pondérations"]:
                 st.session_state[champ] = []
@@ -157,3 +157,4 @@ def reset_champs_si_requis():
             else:
                 st.session_state[champ] = ""
         st.session_state.reset_required = False
+

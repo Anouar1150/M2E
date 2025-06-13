@@ -74,7 +74,8 @@ with st.form("ajout_operation"):
     N2 = st.checkbox("N2 - Accessibilité difficile", key="N2")
     N3 = st.checkbox("N3 - Ajustement/indexage délicat", key="N3")
     st.markdown("---")  # Séparation visuelle
-    point_dur = st.checkbox("Point dur", key="point_dur")
+    point_dur_posture = st.checkbox("Point dur lié à la posture", key="point_dur_posture")
+    point_dur_effort = st.checkbox("Point dur lié à l'effort", key="point_dur_effort")
     with st.expander("Ajouter un commentaire libre (optionnel)"):
         commentaire = st.text_area("Commentaire", key="commentaire_op")
 
@@ -94,7 +95,7 @@ with st.form("ajout_operation"):
             effort_pondere = poids * coeff
             niveaux = [int(p[1]) for p in postures if p[1].isdigit()]
             niveau_posture = max(niveaux + [3])
-            if niveaux.count(4) >= 2:
+            if niveaux.count(4) >= 2 or point_dur_posture:
                 niveau_posture = 5
 
             st.session_state.operations.append({
@@ -102,7 +103,8 @@ with st.form("ajout_operation"):
                 "poids": poids, "freq_effort": freq_effort, "effort_pondere": effort_pondere,
                 "pondérations": pondérations,
                 "niveau_posture": niveau_posture,
-                "N1": N1, "N2": N2, "N3": N3,"point_dur": point_dur,"commentaire": commentaire
+                "N1": N1, "N2": N2, "N3": N3,"commentaire": commentaire, "point_dur_posture": point_dur_posture,
+                "point_dur_effort": point_dur_effort
             })
             st.success("✅ Opération ajoutée !")
             st.session_state.reset_required = True
@@ -207,12 +209,34 @@ if st.session_state.operations:
         lateral_stepping=lateral_stepping
     )
 
+    # 🔍 Forçage du niveau de posture si un point dur posture est détecté
+    point_dur_posture = any(op.get("point_dur_posture") for op in st.session_state.operations)
+
+    if point_dur_posture:
+        niveau_posture = 5  # Forcer le niveau
+
+        # 🧹 Supprimer les explications de rétrogradation (ex : posture 5 → posture 3)
+        posture_explication = [
+            exp for exp in posture_explication
+            if "→ posture 3" not in exp.lower()
+        ]
+
+        # ✅ Ajouter une explication claire liée au point dur
+        posture_explication.append("Point dur identifié sur la posture")
+
+
+    # 🔁 Recalcul nécessaire ici
+    point_dur_effort = any(op.get("point_dur_effort") for op in st.session_state.operations)
 
     effort_moyen = total_effort_x_freq / total_freq_effort if total_freq_effort else 0
     niveau_effort_global = get_effort_level_global(effort_moyen, total_freq_effort)
     niveau_effort_significatif = get_effort_level_global(effort_moyen_significatif, total_freq_significative)
     niveau_effort = max(niveau_effort_global, niveau_effort_significatif)
-    
+
+    if point_dur_effort:
+        niveau_effort = 5
+
+
     nb_contraintes_cognitives = cognitif_count  # N1, N2, N3 déjà comptés
 
     contraintes_detectees = []
@@ -267,10 +291,11 @@ if st.session_state.operations:
 
     niveaux = [niveau_posture, niveau_effort, niveau_cognitif]
     
-    # Détection d'au moins un point dur
-    point_dur_detecte = any(op.get("point_dur") for op in st.session_state.operations)
+    # Détection des points durs spécifiques
+    point_dur_posture = any(op.get("point_dur_posture") for op in st.session_state.operations)
+    point_dur_effort = any(op.get("point_dur_effort") for op in st.session_state.operations)
 
-    if point_dur_detecte:
+    if point_dur_posture or point_dur_effort:
         cotation = "P1 (Très contraignant)"
     elif high_movement:
         cotation = "P1 (Très contraignant)"
@@ -280,6 +305,7 @@ if st.session_state.operations:
         cotation = "P2 (Contraignant)"
     else:
         cotation = "P3 (Recommandé)"
+
 
     st.success(f"➡️ Cotation finale : **{cotation}**")
     st.session_state['cotation'] = cotation
@@ -393,8 +419,16 @@ if st.button("📄 Télécharger la synthèse en PDF"):
     niveaux_4 = [k for k, v in details_niveaux.items() if v == 4]
     niveaux_5 = [k for k, v in details_niveaux.items() if v == 5]
 
-    if point_dur_detecte:
-        justification = "Poste classé en P1 car une ou plusieurs opérations sont marquées comme point dur"
+    if point_dur_effort and niveau_effort == 5:
+        justification = "Poste classé en P1 car le critère Effort est à 5, et un point dur a été identifié sur l'effort."
+    elif point_dur_posture and niveau_posture == 5:
+        justification = "Poste classé en P1 car le critère Posture est à 5, et un point dur a été identifié sur la posture."
+    elif point_dur_effort and point_dur_posture:
+        justification = "Poste classé en P1 car des points durs ont été identifiés sur la posture et l'effort."
+    elif point_dur_effort:
+        justification = "Poste classé en P1 car un point dur lié à l'effort a été identifié."
+    elif point_dur_posture:
+        justification = "Poste classé en P1 car un point dur lié à la posture a été identifié."
     elif cotation.startswith("P1"):
         if niveaux_5:
             justification = f"Poste classé en P1 car le critère {', '.join(niveaux_5)} est à 5"
@@ -404,6 +438,7 @@ if st.button("📄 Télécharger la synthèse en PDF"):
         justification = f"Poste classé en P2 car un seul critère est à 4 : {', '.join(niveaux_4)}"
     else:
         justification = "Poste classé en P3 car tous les critères sont à 3 ou moins"
+
 
 
     pdf.multi_cell(0, 8, justification)
@@ -427,8 +462,10 @@ if st.button("📄 Télécharger la synthèse en PDF"):
         contraintes = [LIBELLES_COGNITIF[k] for k in ["N1", "N2", "N3"] if op.get(k)]
         if contraintes:
             pdf.cell(0, 8, f"   - Contraintes cognitives : {', '.join(contraintes)}", ln=True)
-        if op.get("point_dur"):
-            pdf.cell(0, 8, "   - Point dur : Oui", ln=True)
+        if op.get("point_dur_posture"):
+            pdf.cell(0, 8, "   - Point dur : posture", ln=True)
+        if op.get("point_dur_effort"):
+            pdf.cell(0, 8, "   - Point dur : effort", ln=True)
         if op.get("commentaire"):
             pdf.multi_cell(0, 8, safe_text(f"   - Commentaire : {op['commentaire']}"))
         pdf.ln(1)
