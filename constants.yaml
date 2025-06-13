@@ -2,13 +2,13 @@ ponderations:
   M1 - Retournement facilité avec appui (0.5): 0.5
   M2 - Poussée ou traction assistée (0.7): 0.7
   M3 - Retournement sans appui (1.5): 1.5
-  M4 - Bras écartés >1m ou tendus >50cm (1.5): 1.5
+  M4 - Bras écartés > 1m ou tendus > 50cm (1.5): 1.5
   M5 - Maintien précis 1 main prolongé (1.5): 1.5
   M6 - Charge instable ou CG déporté (1.5): 1.5
-  M7 - Port >6kg hors fenêtre ergonomique (1.5): 1.5
-  M8 - Prise bout des doigts ou 1 main >6kg (1.5): 1.5
-  M9 - Port >6kg avec marches (1.5): 1.5
-  M10 - Port >6kg avec déplacement >5m (1.5): 1.5
+  M7 - Port > 6kg hors fenêtre ergonomique (1.5): 1.5
+  M8 - Prise bout des doigts ou 1 main > 6kg (1.5): 1.5
+  M9 - Port > 6kg avec marches (1.5): 1.5
+  M10 - Port > 6kg avec déplacement > 5m (1.5): 1.5
   M11 - Effort en abduction (bras écartés) (2.0): 2.0
   M12 - Soulèvement en position assise (2.0): 2.0
 
@@ -16,12 +16,12 @@ postures_niveau_4_5:
   - A4 - Dos penché sans appui ou avec charge / durée (30°-60°)
   - A5 - Dos penché sans appui ou avec charge / durée (> 60°)
   - B4 - Dos penché avec appui stable, courte durée et effort <2kg (30°-60°)
-  - B5 - Dos penché avec appui stable, courte durée et effort <2kg (>60°)
+  - B5 - Dos penché avec appui stable, courte durée et effort < 2kg (> 60°)
   - C4 - Inclinaison latérale du tronc (30°-60°)
   - C5 - Inclinaison latérale du tronc > 60°
   - D4 - Rotation tronc modérée (45°-90°) ou inclinaison avec maintien
   - D5 - Rotation tronc importante > 90° ou forte inclinaison prolongée
-  - E4 - Inclinaison tête >30° ou rotation 45°-90° (durée > 5s)
+  - E4 - Inclinaison tête > 30° ou rotation 45°-90° (durée > 5s)
   - E5 - Rotation tête > 90° ou forte extension arrière
   - F4 - Bras levés / tendus avec charge ou durée > 5s
   - F5 - Bras très hauts ou en élévation prolongée (> 45°)
