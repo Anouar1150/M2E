@@ -144,8 +144,9 @@ def get_effort_level_global(poids_moyen, freq):
 def reset_champs_si_requis():
     import streamlit as st
     if st.session_state.get("reset_required", False):
-        for champ in ["nom_op", "postures", "freq_posture", "poids", "freq_effort", "pondérations", "N1", "N2", "N3"]:
-            if champ in ["N1", "N2", "N3"]:
+        for champ in ["nom_op", "postures", "freq_posture", "poids", "freq_effort", 
+                      "pondérations", "N1", "N2", "N3", "point_dur", "commentaire_op"]:
+            if champ in ["N1", "N2", "N3", "point_dur"]:
                 st.session_state[champ] = False
             elif champ in ["postures", "pondérations"]:
                 st.session_state[champ] = []
